@@ -33,7 +33,6 @@ Use the startStream method to start streaming to your Icecast server. You can co
 ```dart
 void startIcecastStream() async {
   await IcecastFlutter.instance.startStream(
-    inputDeviceId: 1,
     bitrate: 128,
     numChannels: 2,
     sampleRate: 44100,

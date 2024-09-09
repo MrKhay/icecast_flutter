@@ -38,7 +38,7 @@ class IcecastFlutter {
   final void Function(String error)? onError;
 
   ///  Callback for when streaming ends with no error
-  final void Function()? onExist;
+  final void Function()? onComplete;
 
   /// PCM-16 bit input stream 1
   late final Stream<List<int>> inputStream1;
@@ -51,11 +51,11 @@ class IcecastFlutter {
   Future<void> _handleNativeMethodCall(MethodCall call) async {
     switch (call.method) {
       case "onError":
-        String error = call.arguments();
+        String error = call.arguments['error'];
         onError?.call(error);
         break;
-      case "onExist":
-        onExist?.call();
+      case "onComplete":
+        onComplete?.call();
         break;
       default:
         throw MissingPluginException(
@@ -70,7 +70,7 @@ class IcecastFlutter {
     this.numChannels = 2,
     this.sampleRate = 44100,
     this.onError,
-    this.onExist,
+    this.onComplete,
     required this.serverAddress,
     required this.port,
     required this.password,

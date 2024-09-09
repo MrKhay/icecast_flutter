@@ -67,7 +67,10 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
     }
 
     void logError(String msg) {
-        channel.invokeMethod("onError", msg);
+        // Create a map to hold error information
+        Map<String, String> errorInfo = new HashMap<>();
+        errorInfo.put("error", msg);  // Key should match what Dart expects
+        channel.invokeMethod("onError", errorInfo);
     }
 
 
@@ -86,7 +89,6 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
                 try {
                     fos1 = new FileOutputStream(pipePath1);
                 } catch (FileNotFoundException e) {
-                    logError("Failed to open output stream 1");
                     Log.e("FFmpeg", "Failed to open output stream 1", e);
                 }
             }).start();
@@ -97,7 +99,6 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
                     fos2 = new FileOutputStream(pipePath2);
                     writeSilenceToNamedPipe2(fos2);
                 } catch (FileNotFoundException e) {
-                    logError("Failed to open output stream 2");
                     Log.e("FFmpeg", "Failed to open output stream 2", e);
                 }
             }).start();
@@ -118,14 +119,13 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
                         "-c:a", "libmp3lame", "-b:a", BIT_RATE + "k",
                         "-f", "mp3",
                         "icecast://" + ICECAST_USERNAME + ":" + ICECAST_PASSWORD + "@" + ICECAST_SERVER_ADDRESS + ":" + ICECAST_PORT + ICECAST_MOUNT,
-                        "-loglevel", "verbose"
+                        "-loglevel", "verbose",
                 };
 
                 // Run the FFmpeg process
                 try {
                     long id = FFmpeg.executeAsync(command, new ExecuteCallback());
                 } catch (Exception e) {
-                    logError(e.getMessage());
                     Log.i("FFmpeg", "Executing FFmpeg command");
                 }
 
@@ -133,7 +133,6 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
 
             streamingThread.start();
         } catch (Exception e) {
-            logError(e.getMessage());
             Log.e("FFmpeg", "Streaming failed" + e.getMessage());
         }
     }
@@ -166,7 +165,7 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
             closeAndDeleteNamedPipes();
             return null;
         } catch (Exception e) {
-            logError("Error stopping stream: " + e.getMessage());
+            logError(e.getMessage());
             return "Stopping stream failed: " + e.getMessage();
         }
     }
@@ -180,7 +179,7 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
             }
             return null;
         } catch (IOException e) {
-            logError("Error writing to stream 1: " + e.getMessage());
+            Log.i("FFmpeg","(1) " + e.getMessage());
             return e.getMessage();
         }
     }
@@ -194,7 +193,7 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
             }
             return null;
         } catch (IOException e) {
-            logError("Error writing to stream 2: " + e.getMessage());
+            Log.i("FFmpeg","(2) " + e.getMessage());
             return e.getMessage();
         }
     }
@@ -216,7 +215,7 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
             try {
                 Runtime.getRuntime().exec("mkfifo " + pipePath1).waitFor();
             } catch (IOException | InterruptedException e) {
-                logError("Error opening stream 1: " + e.getMessage());
+                Log.i("FFmpeg", "(1) " + e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -228,7 +227,7 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
             try {
                 Runtime.getRuntime().exec("mkfifo " + pipePath2).waitFor();
             } catch (IOException | InterruptedException e) {
-                logError("Error opening stream 2: " + e.getMessage());
+                Log.i("FFmpeg", "(2) " + e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -279,11 +278,14 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
             // Handle completion
             if (returnCode == 0) {
                 Log.i("FFmpeg", "Streaming completed successfully");
-                channel.invokeMethod("onExist", "Streaming completed successfully");
+                channel.invokeMethod("onComplete", "Streaming completed successfully");
             } else {
+                logError("Connection to Icecast failed");
                 Log.e("FFmpeg", "Error in streaming with return code: " + returnCode);
             }
         }
+
+
     }
 
     @Override

@@ -2,11 +2,6 @@ import 'package:flutter/services.dart';
 import 'icecast_flutter_platform_interface.dart';
 
 class IcecastFlutter {
-  /// [InputDevice] to stream from ID
-  ///
-  /// If id is null default stream device is used
-  final int? inputDeviceId;
-
   /// Streaming sampleRate `default is 44100 Hz`
   final int sampleRate;
 
@@ -65,7 +60,6 @@ class IcecastFlutter {
 
   /// IcecastFlutter Constructor
   IcecastFlutter({
-    this.inputDeviceId,
     this.bitrate = 128,
     this.numChannels = 2,
     this.sampleRate = 44100,

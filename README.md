@@ -42,6 +42,13 @@ void startIcecastStream() async {
     mount: '/stream',
     serverAddress: 'your.server.com',
     port: 8000,
+    onComplete:(){
+      // callback 
+    },
+    onError(String error){
+      // callback
+    }
+
   );
 }
 ```

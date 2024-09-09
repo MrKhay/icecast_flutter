@@ -30,8 +30,23 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     record = AudioRecorder();
-    print("Starting....");
 
+    _icecastFlutterPlugin = IcecastFlutter(
+      password: password,
+      userName: username,
+      serverAddress: serverAddress,
+      mount: mount,
+      port: serverPort,
+      bitrate: bitRate,
+      sampleRate: sampleRate,
+      numChannels: numChannels,
+      onError: (error) {
+        print("Streaming Error: $error");
+      },
+      onComplete: () {
+        print("Streaming Completed 🟢");
+      },
+    );
     super.initState();
   }
 
@@ -51,22 +66,6 @@ class _MyAppState extends State<MyApp> {
         body: Center(
           child: FilledButton.tonal(
               onPressed: () async {
-                _icecastFlutterPlugin = IcecastFlutter(
-                  password: password,
-                  userName: username,
-                  serverAddress: serverAddress,
-                  mount: mount,
-                  port: serverPort,
-                  bitrate: bitRate,
-                  sampleRate: sampleRate,
-                  numChannels: numChannels,
-                  onError: (error) {
-                    print("Streaming Error: $error");
-                  },
-                  onComplete: () {
-                    print("Streaming Completed 🟢");
-                  },
-                );
                 if (!isStreaming) {
                   outputStream1 = StreamController.broadcast();
                   outputStream2 = StreamController.broadcast();

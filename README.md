@@ -26,29 +26,39 @@ flutter pub get icecast_flutter
 import 'package:icecast_flutter/icecast_flutter.dart';
 ```
 
-## Initialize and Start Streaming
+## Initialize
 
 Use the startStream method to start streaming to your Icecast server. You can configure the stream by providing details like bitrate, sample rate, number of channels, and Icecast server credentials.
 
 ```dart
-void startIcecastStream() async {
-  await IcecastFlutter.instance.startStream(
-    bitrate: 128,
-    numChannels: 2,
-    sampleRate: 44100,
-    userName: 'your-username',
-    password: 'your-password',
-    mount: '/stream',
-    serverAddress: 'your.server.com',
-    port: 8000,
-    onComplete:(){
-      // callback 
-    },
-    onError(String error){
-      // callback
-    }
 
-  );
+  _icecastFlutterPlugin =  IcecastFlutter(
+      password: password,
+      userName: username,
+      serverAddress: serverAddress,
+      mount: mount,
+      port: serverPort,
+      bitrate: bitRate,
+      sampleRate: sampleRate,
+      numChannels: numChannels,
+      onError: (error) {
+        print("Streaming Error: $error");
+      },
+      onComplete: () {
+        print("Streaming Completed 🟢");
+      },
+    );
+
+```
+
+## Start Streaming
+
+```dart
+void startIcecastStream() async {
+
+   await _icecastFlutterPlugin.startStream(
+          outputStream1.stream,
+          outputStream2.stream);
 }
 ```
 
@@ -58,7 +68,7 @@ To stop the ongoing audio stream:
 
 ```dart
 void stopIcecastStream() async {
-  await IcecastFlutter.instance.stopStream();
+  await _icecastFlutterPlugin.stopStream();
 }
 ```
 
@@ -66,10 +76,10 @@ void stopIcecastStream() async {
 
 ```dart
 // Write to stream pipe 1
-await IcecastFlutter.instance.writeToStream1(yourPcmByteArray);
+outputStream1.add(yourPcmByteArray);
 
 // Write to stream pipe 2
-await IcecastFlutter.instance.writeToStream2(yourPcmByteArray);
+outputStream2.add(yourPcmByteArray);
 ```
 
 ## Platform Support

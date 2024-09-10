@@ -114,14 +114,15 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
                         "-f", "s16le", "-ar", SAMPLE_RATE, "-ac", NUM_CHANNELS,
                         "-i", pipePath2,  // Music audio
 
-                        // Use a more advanced filter to handle silence and avoid repetition
-                        "-filter_complex", "[0:a]aresample=async=1:first_pts=0[a1];[1:a]aresample=async=1:first_pts=0[a2];[a1][a2]amix=inputs=2:duration=longest:dropout_transition=0",
+                        // Mix the two inputs without any resampling or complex synchronization to avoid repetition
+                        "-filter_complex", "[0:a][1:a]amix=inputs=2",
 
                         "-c:a", "libmp3lame", "-b:a", BIT_RATE + "k",
                         "-f", "mp3",
                         "icecast://" + ICECAST_USERNAME + ":" + ICECAST_PASSWORD + "@" + ICECAST_SERVER_ADDRESS + ":" + ICECAST_PORT + ICECAST_MOUNT,
                         "-loglevel", "verbose",
                 };
+
 
 
 

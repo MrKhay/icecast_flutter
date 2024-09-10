@@ -107,17 +107,15 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
             // Start streaming thread
             streamingThread = new Thread(() -> {
                 String[] command = {
-                    "-fflags", "nobuffer",
-                    "-thread_queue_size", "512",
-                    "-f", "s16le", "-ar", SAMPLE_RATE, "-ac", NUM_CHANNELS,
-                    "-i", pipePath1,  // Mic audio
-            
-                    // Directly send the audio to Icecast without mixing with another input
-                    "-c:a", "libmp3lame", "-b:a", BIT_RATE + "k",
-                    "-f", "mp3",
-                    "icecast://" + ICECAST_USERNAME + ":" + ICECAST_PASSWORD + "@" + ICECAST_SERVER_ADDRESS + ":" + ICECAST_PORT + ICECAST_MOUNT,
-                    "-re",  // Real-time input
-                    "-loglevel", "verbose",
+                    "-f", "s16le",               // Raw PCM 16-bit little-endian
+                    "-ar", SAMPLE_RATE, // Set sample rate
+                    "-ac", NUM_CHANNELS,                  // Single channel (mono)
+                    "-i", pipePath1,              // Input from the named pipe
+                    "-c:a", "libmp3lame",        // Use LAME MP3 encoder
+                    "-b:a", BIT_RATE+"k",              // Set audio bitrate
+                    "-f", "mp3",                 // Use MP# container format
+                    "icecast://" + ICECAST_USERNAME + ":" + ICECAST_PASSWORD + "@" + ICECAST_SERVER_ADDRESS +":"+ICECAST_PORT+ ICECAST_MOUNT
+
             };
             
 

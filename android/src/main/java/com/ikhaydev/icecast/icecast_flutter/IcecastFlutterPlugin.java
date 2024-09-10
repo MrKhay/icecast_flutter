@@ -56,8 +56,7 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
     private FileOutputStream fos2;
 
     private Thread streamingThread;
-    private Thread fos1Thread;
-    private Thread fos2Thread;
+
     private String pipePath1;
     private String pipePath2;
 
@@ -87,23 +86,22 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
             createNamedPipe2();
 
             // Initialize Pipe 1
-            fos1Thread = new Thread(() -> {
+            new Thread(() -> {
                 try {
                     fos1 = new FileOutputStream(pipePath1);
                 } catch (FileNotFoundException e) {
                     Log.e("FFmpeg", "Failed to open output stream 1", e);
                 }
-            });
+            }).start();
             // Initialize Pipe 2
-            fos2Thread = new Thread(() -> {
+            new Thread(() -> {
                 try {
                     fos2 = new FileOutputStream(pipePath2);
                     writeSilenceToNamedPipe2(fos2);
                 } catch (FileNotFoundException e) {
                     Log.e("FFmpeg", "Failed to open output stream 2", e);
                 }
-            });
-            fos1Thread.start();
+            }).start();
 
             // Start streaming thread
             streamingThread = new Thread(() -> {
@@ -141,12 +139,12 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
 
     private void writeSilenceToNamedPipe2(FileOutputStream fos) {
         byte[] silence = new byte[Integer.parseInt(SAMPLE_RATE) * Integer.parseInt(NUM_CHANNELS) * 10]; // 2 seconds
-            try {
-                fos.write(silence);
-                fos.flush(); // Ensure data is written to the pipe
-            } catch (IOException e) {
-                Log.e("FFmpeg", "Error writing continuous silence to pipe2: " + e.getMessage());
-            }
+        try {
+            fos.write(silence);
+            fos.flush(); // Ensure data is written to the pipe
+        } catch (IOException e) {
+            Log.e("FFmpeg", "Error writing continuous silence to pipe2: " + e.getMessage());
+        }
     }
 
     private String stopStreaming() {
@@ -154,17 +152,16 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
             if (streamingThread != null) {
                 streamingThread.interrupt();
                 streamingThread = null;
-                fos1Thread.interrupt();
-                fos1Thread=null;
-                fos2Thread.interrupt();
-                fos2Thread=null;
+
             }
             FFmpeg.cancel();
             if (fos1 != null) {
                 fos1.close();
+                fos1 = null;
             }
             if (fos2 != null) {
                 fos2.close();
+                fos2 = null;
             }
             closeAndDeleteNamedPipes();
             return null;
@@ -183,7 +180,7 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
             }
             return null;
         } catch (IOException e) {
-            Log.i("FFmpeg","(1) " + e.getMessage());
+            Log.i("FFmpeg", "(1) " + e.getMessage());
             return e.getMessage();
         }
     }
@@ -197,7 +194,7 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
             }
             return null;
         } catch (IOException e) {
-            Log.i("FFmpeg","(2) " + e.getMessage());
+            Log.i("FFmpeg", "(2) " + e.getMessage());
             return e.getMessage();
         }
     }

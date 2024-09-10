@@ -33,10 +33,7 @@ class IcecastFlutter {
   final void Function()? _onComplete;
 
   /// PCM-16 bit input stream 1
-  late final Stream<List<int>> _inputStream1;
-
-  /// PCM-16 bit input stream 2
-  late final Stream<List<int>> _inputStream2;
+  late final Stream<List<int>> _inputStream;
 
   static const MethodChannel _channel = MethodChannel('icecast_flutter');
 
@@ -83,14 +80,9 @@ class IcecastFlutter {
   /// Starts new Stream
   ///
   /// Returns [String] representation of error if any else returns [NULL]
-  Future<void> startStream(
-    Stream<List<int>> inputStream1,
-    Stream<List<int>> inputStream2,
-  ) async {
-    // init stream 1
-    _inputStream1 = inputStream1;
-    // init stream 2
-    _inputStream2 = inputStream2;
+  Future<void> startStream(Stream<List<int>> inputStream1) async {
+    // init stream
+    _inputStream = inputStream1;
 
     await IcecastFlutterPlatform.instance.startStream(
       bitrate: _bitrate,
@@ -108,22 +100,13 @@ class IcecastFlutter {
 
   void _listenToPCMBytes() {
     // listen and send new bytes to stream 1
-    _inputStream1.listen((List<int> byte) async {
-      await writeToStream1(byte);
-    });
-
-    // listen and send new bytes to stream 2
-    _inputStream2.listen((List<int> byte) async {
-      await writeToStream2(byte);
+    _inputStream.listen((List<int> byte) async {
+      await writeToStream(byte);
     });
   }
 
-  Future<String?> writeToStream1(List<int> byte) async {
-    return await IcecastFlutterPlatform.instance.writeToStream1(byte);
-  }
-
-  Future<String?> writeToStream2(List<int> byte) async {
-    return await IcecastFlutterPlatform.instance.writeToStream2(byte);
+  Future<String?> writeToStream(List<int> byte) async {
+    return await IcecastFlutterPlatform.instance.writeToStream(byte);
   }
 
   /// Stop stream

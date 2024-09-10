@@ -47,11 +47,7 @@ abstract class IcecastFlutterPlatform extends PlatformInterface {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
 
-  Future<String?> writeToStream1(List<int> byte) {
-    throw UnimplementedError('platformVersion() has not been implemented.');
-  }
-
-  Future<String?> writeToStream2(List<int> byte) {
+  Future<String?> writeToStream(List<int> byte) {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
 }

@@ -1,21 +1,14 @@
 package com.ikhaydev.icecast.icecast_flutter;
 
-import static androidx.core.content.ContextCompat.getSystemService;
 import static io.flutter.util.PathUtils.getFilesDir;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.media.AudioDeviceInfo;
-import android.media.AudioFormat;
-import android.media.AudioManager;
-import android.media.AudioRecord;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import com.arthenica.mobileffmpeg.FFmpeg;
-import com.arthenica.mobileffmpeg.FFprobe;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -25,9 +18,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
@@ -54,12 +45,10 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
     private String ICECAST_MOUNT;
     private String ICECAST_SERVER_ADDRESS;
     private FileOutputStream fos1;
-    private FileOutputStream fos2;
 
     private Thread streamingThread;
 
-    private String pipePath1;
-    private String pipePath2;
+    private String pipePath;
 
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
@@ -81,26 +70,15 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
 
             // Get the app's private storage directory and create a named pipe
             File storageDir = new File(getFilesDir(context));
-            pipePath1 = new File(storageDir, "audio_pipe_one").getAbsolutePath();
-            pipePath2 = new File(storageDir, "audio_pipe_two").getAbsolutePath();
-            createNamedPipe1();
-            createNamedPipe2();
+            pipePath = new File(storageDir, "audio_pipe_one").getAbsolutePath();
+            createNamedPipe();
 
             // Initialize Pipe 1
             new Thread(() -> {
                 try {
-                    fos1 = new FileOutputStream(pipePath1);
+                    fos1 = new FileOutputStream(pipePath);
                 } catch (FileNotFoundException e) {
                     Log.e("FFmpeg", "Failed to open output stream 1", e);
-                }
-            }).start();
-            // Initialize Pipe 2
-            new Thread(() -> {
-                try {
-                    fos2 = new FileOutputStream(pipePath2);
-                    writeSilenceToNamedPipe2(fos2);
-                } catch (FileNotFoundException e) {
-                    Log.e("FFmpeg", "Failed to open output stream 2", e);
                 }
             }).start();
 
@@ -111,7 +89,7 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
                     "-f", "s16le",  // PCM 16-bit
                     "-ar", SAMPLE_RATE,  // Set the sample rate
                     "-ac", NUM_CHANNELS,  // Set the channel count
-                    "-i", pipePath1,  // Input from the named pipe
+                    "-i", pipePath,  // Input from the named pipe
                     "-c:a", "libopus",  // Use the Opus codec for output
                     "-b:a", BIT_RATE + "k",  // Set the bitrate for Opus
                     "-application", "audio",  // Set the Opus application type (audio)
@@ -135,16 +113,6 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
     }
 
 
-    private void writeSilenceToNamedPipe2(FileOutputStream fos) {
-        byte[] silence = new byte[Integer.parseInt(SAMPLE_RATE) * Integer.parseInt(NUM_CHANNELS) * 10]; // 2 seconds
-        try {
-            fos.write(silence);
-            fos.flush(); // Ensure data is written to the pipe
-        } catch (IOException e) {
-            Log.e("FFmpeg", "Error writing continuous silence to pipe2: " + e.getMessage());
-        }
-    }
-
     private String stopStreaming() {
         try {
             if (streamingThread != null) {
@@ -156,10 +124,6 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
             if (fos1 != null) {
                 fos1.close();
                 fos1 = null;
-            }
-            if (fos2 != null) {
-                fos2.close();
-                fos2 = null;
             }
             closeAndDeleteNamedPipes();
             return null;
@@ -183,19 +147,6 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
         }
     }
 
-    private String writeToNamedPipe2(byte[] chunk) {
-        try {
-            if (fos2 != null) {
-                fos2.write(chunk);
-//                logByteArray(chunk);
-                fos2.flush(); // Ensure data is written
-            }
-            return null;
-        } catch (IOException e) {
-            Log.i("FFmpeg", "(2) " + e.getMessage());
-            return e.getMessage();
-        }
-    }
 
     private void logByteArray(byte[] byteArray) {
         StringBuilder unsignedData = new StringBuilder("Unsigned bytes: ");
@@ -208,11 +159,11 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
     }
 
 
-    private void createNamedPipe1() {
-        File pipe = new File(pipePath1);
+    private void createNamedPipe() {
+        File pipe = new File(pipePath);
         if (!pipe.exists()) {
             try {
-                Runtime.getRuntime().exec("mkfifo " + pipePath1).waitFor();
+                Runtime.getRuntime().exec("mkfifo " + pipePath).waitFor();
             } catch (IOException | InterruptedException e) {
                 Log.i("FFmpeg", "(1) " + e.getMessage());
                 e.printStackTrace();
@@ -220,21 +171,9 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
         }
     }
 
-    private void createNamedPipe2() {
-        File pipe = new File(pipePath2);
-        if (!pipe.exists()) {
-            try {
-                Runtime.getRuntime().exec("mkfifo " + pipePath2).waitFor();
-            } catch (IOException | InterruptedException e) {
-                Log.i("FFmpeg", "(2) " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-    }
 
     private void closeAndDeleteNamedPipes() {
-        deletePipe(pipePath1);
-        deletePipe(pipePath2);
+        deletePipe(pipePath);
     }
 
     private void deletePipe(String path) {
@@ -306,15 +245,10 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
                 String errorMsg = stopStreaming();
                 result.success(errorMsg);
                 break;
-            case "writeToPipe1":
+            case "writeToPipe":
                 java.util.ArrayList<Integer> chunk1 = call.argument("chunk");
                 String pipe1Error = writeToNamedPipe1(convertIntListToUnsignedByteArray(chunk1));
                 result.success(pipe1Error);
-                break;
-            case "writeToPipe2":
-                java.util.ArrayList<Integer> chunk2 = call.argument("chunk");
-                String pipe2Error = writeToNamedPipe2(convertIntListToUnsignedByteArray(chunk2));
-                result.success(pipe2Error);
                 break;
             default:
                 result.notImplemented();

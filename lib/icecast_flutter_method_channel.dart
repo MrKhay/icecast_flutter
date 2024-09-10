@@ -51,34 +51,11 @@ class MethodChannelIcecastFlutter extends IcecastFlutterPlatform {
   }
 
   @override
-  Future<List<Map>> getInputDevices() async {
-    var result = await methodChannel.invokeMethod<List<Map>>('getInputDevices');
-
-    if (result != null) {
-      return result;
-    }
-    return [];
-  }
-
-  @override
-  Future<String?> writeToStream1(List<int> byte) async {
+  Future<String?> writeToStream(List<int> byte) async {
     try {
-      await methodChannel
-          .invokeMethod<String?>('writeToPipe1', {"chunk": byte});
+      await methodChannel.invokeMethod<String?>('writeToPipe', {"chunk": byte});
     } on PlatformException catch (e) {
       debugPrint("Sending PCM Error 1: ${e.code}, ${e.message}");
-      return e.message;
-    }
-    return null;
-  }
-
-  @override
-  Future<String?> writeToStream2(List<int> byte) async {
-    try {
-      await methodChannel
-          .invokeMethod<String?>('writeToPipe2', {"chunk": byte});
-    } on PlatformException catch (e) {
-      debugPrint("Sending PCM Error 2: ${e.code}, ${e.message}");
       return e.message;
     }
     return null;

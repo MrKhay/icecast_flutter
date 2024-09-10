@@ -107,26 +107,19 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
             // Start streaming thread
             streamingThread = new Thread(() -> {
                 String[] command = {
-                        "-fflags", "nobuffer",
-                        "-thread_queue_size", "512",
-                        "-f", "s16le", "-ar", SAMPLE_RATE, "-ac", NUM_CHANNELS,
-                        "-i", pipePath1,  // Mic audio
-                        "-thread_queue_size", "512",
-                        "-f", "s16le", "-ar", SAMPLE_RATE, "-ac", NUM_CHANNELS,
-                        "-i", pipePath2,  // Music audio
-
-                        // Mix the two inputs, ensuring silence when one is empty
-                        "-filter_complex", "[0:a][1:a]amix=inputs=2:duration=longest:dropout_transition=0",
-
-                        "-c:a", "libmp3lame", "-b:a", BIT_RATE + "k",
-                        "-f", "mp3",
-                        "icecast://" + ICECAST_USERNAME + ":" + ICECAST_PASSWORD + "@" + ICECAST_SERVER_ADDRESS + ":" + ICECAST_PORT + ICECAST_MOUNT,
-                        "-re",  // Real-time input
-                        "-loglevel", "verbose",
-                };
-
-
-
+                    "-fflags", "nobuffer",
+                    "-thread_queue_size", "512",
+                    "-f", "s16le", "-ar", SAMPLE_RATE, "-ac", NUM_CHANNELS,
+                    "-i", pipePath1,  // Mic audio
+            
+                    // Directly send the audio to Icecast without mixing with another input
+                    "-c:a", "libmp3lame", "-b:a", BIT_RATE + "k",
+                    "-f", "mp3",
+                    "icecast://" + ICECAST_USERNAME + ":" + ICECAST_PASSWORD + "@" + ICECAST_SERVER_ADDRESS + ":" + ICECAST_PORT + ICECAST_MOUNT,
+                    "-re",  // Real-time input
+                    "-loglevel", "verbose",
+            };
+            
 
 
                 // Run the FFmpeg process

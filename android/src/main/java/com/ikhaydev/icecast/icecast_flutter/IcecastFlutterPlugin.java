@@ -70,9 +70,17 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
 
             // Get the app's private storage directory and create a named pipe
             File storageDir = new File(getFilesDir(context));
-            pipePath = new File(storageDir, "audio_pipe_one").getAbsolutePath();
+            pipePath = new File(storageDir, "audio_pipe").getAbsolutePath();
             createNamedPipe();
 
+            // Initialize Pipe 1
+            new Thread(() -> {
+                try {
+                    fos1 = new FileOutputStream(pipePath);
+                } catch (FileNotFoundException e) {
+                    Log.e("FFmpeg", "Failed to open output stream 1", e);
+                }
+            }).start();
 
             // Start streaming thread
 
@@ -82,12 +90,12 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
                     "-ar", SAMPLE_RATE,  // Set the sample rate
                     "-ac", NUM_CHANNELS,  // Set the channel count
                     "-i", pipePath,  // Input from the named pipe
-                    "-c:a", "libopus",  // Use the Opus codec for output
-                    "-b:a", BIT_RATE + "k",  // Set the bitrate for Opus
-                    "-application", "audio",  // Set the Opus application type (audio)
-                    "-f", "opus",  // Set the output format to Opus
+                    "-c:a", "libmp3lame",  // Use the MP3 codec (LAME) for output
+                    "-b:a", BIT_RATE + "k",  // Set the bitrate for MP3
+                    "-f", "mp3",  // Set the output format to MP3
                     "icecast://" + ICECAST_USERNAME + ":" + ICECAST_PASSWORD + "@" + ICECAST_SERVER_ADDRESS + ":" + ICECAST_PORT + ICECAST_MOUNT
             };
+
 
 
             // Run the FFmpeg process
@@ -97,10 +105,7 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
             } catch (Exception e) {
                 Log.i("FFmpeg", "Executing FFmpeg command");
             }
-
-            fos1 = new FileOutputStream(pipePath);
             streamingThread.start();
-
         } catch (Exception e) {
             Log.e("FFmpeg", "Streaming failed" + e.getMessage());
         }

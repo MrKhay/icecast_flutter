@@ -117,8 +117,8 @@ class _MyAppState extends State<MyApp> {
 
     stream.listen((Uint8List bytes) {
       if (!isStreaming) return;
-      List<int> silenceChunk =
-          IcecastFlutter.generateSilenceChunk(1, sampleRate, numChannels);
+      List<int> silentPCM16Byte =
+          IcecastFlutter.generateSilentBytes(1, sampleRate, numChannels);
       try {
         List<int> pcm16Chunk = AudioRecorder().convertBytesToInt16(bytes);
         byteBuffer.addAll(pcm16Chunk);
@@ -127,14 +127,14 @@ class _MyAppState extends State<MyApp> {
           // update chunk
           byteBuffer = byteBuffer.sublist(bufferSize, byteBuffer.length);
 
-          outputStream1.add(silenceChunk);
+          outputStream1.add(silentPCM16Byte);
           // debugPrint("Audio Chunk $currentChunk");
           outputStream2.add(currentChunk);
           // debugPrint("Chunk 1 $chunk1");
         }
       } catch (e) {
         List<int> silenceChunk =
-            IcecastFlutter.generateSilenceChunk(1, 44100, 2);
+            IcecastFlutter.generateSilentBytes(1, 44100, 2);
         outputStream1.add(silenceChunk);
         outputStream2.add(silenceChunk);
         debugPrint('Streaming error: $e');

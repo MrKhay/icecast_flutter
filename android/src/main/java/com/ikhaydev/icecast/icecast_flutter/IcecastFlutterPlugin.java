@@ -118,23 +118,22 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
                     "-f", "opus",  // Set the output format to Opus
                     "icecast://" + ICECAST_USERNAME + ":" + ICECAST_PASSWORD + "@" + ICECAST_SERVER_ADDRESS + ":" + ICECAST_PORT + ICECAST_MOUNT
             };
-            
 
 
-                // Run the FFmpeg process
-                try {
-                    long id = FFmpeg.executeAsync(command, new ExecuteCallback());
-                } catch (Exception e) {
-                    Log.i("FFmpeg", "Executing FFmpeg command");
-                }
+            // Run the FFmpeg process
+            try {
+                long id = FFmpeg.executeAsync(command, new ExecuteCallback());
+            } catch (Exception e) {
+                Log.i("FFmpeg", "Executing FFmpeg command");
+            }
 
-            });
 
             streamingThread.start();
         } catch (Exception e) {
             Log.e("FFmpeg", "Streaming failed" + e.getMessage());
         }
     }
+
 
     private void writeSilenceToNamedPipe2(FileOutputStream fos) {
         byte[] silence = new byte[Integer.parseInt(SAMPLE_RATE) * Integer.parseInt(NUM_CHANNELS) * 10]; // 2 seconds

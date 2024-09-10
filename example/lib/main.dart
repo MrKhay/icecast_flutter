@@ -111,7 +111,6 @@ class _MyAppState extends State<MyApp> {
         sampleRate: sampleRate,
         noiseSuppress: true,
         echoCancel: true,
-        autoGain: true,
       ),
     );
 

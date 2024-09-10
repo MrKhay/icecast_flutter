@@ -15,6 +15,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.arthenica.mobileffmpeg.FFmpeg;
+import com.arthenica.mobileffmpeg.FFprobe;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -106,21 +107,22 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
             // Start streaming thread
             streamingThread = new Thread(() -> {
                 String[] command = {
-                        "-thread_queue_size", "512",
-                        "-f", "s16le", "-ar", SAMPLE_RATE,
-                        "-ac", NUM_CHANNELS,
+                        "-thread_queue_size", "1024",
+                        "-f", "s16le", "-ar", SAMPLE_RATE, "-ac", NUM_CHANNELS,
                         "-i", pipePath1,  // Mic audio
-                        "-thread_queue_size", "512",
-                        "-f", "s16le",
-                        "-ar", SAMPLE_RATE,
-                        "-ac", NUM_CHANNELS,
+                        "-thread_queue_size", "1024",
+                        "-f", "s16le", "-ar", SAMPLE_RATE, "-ac", NUM_CHANNELS,
                         "-i", pipePath2,  // Music audio (generated silence)
-                        "-filter_complex", "[0:a][1:a]amix=inputs=2:dropout_transition=2",
+
+                        // Mix the two inputs, ensuring silence when a stream is empty
+                        "-filter_complex", "[0:a][1:a]amix=inputs=2:duration=longest:dropout_transition=0",
+
                         "-c:a", "libmp3lame", "-b:a", BIT_RATE + "k",
                         "-f", "mp3",
                         "icecast://" + ICECAST_USERNAME + ":" + ICECAST_PASSWORD + "@" + ICECAST_SERVER_ADDRESS + ":" + ICECAST_PORT + ICECAST_MOUNT,
                         "-loglevel", "verbose",
                 };
+
 
                 // Run the FFmpeg process
                 try {

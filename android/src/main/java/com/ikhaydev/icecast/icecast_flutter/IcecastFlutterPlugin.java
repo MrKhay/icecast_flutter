@@ -73,14 +73,6 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
             pipePath = new File(storageDir, "audio_pipe_one").getAbsolutePath();
             createNamedPipe();
 
-            // Initialize Pipe 1
-            new Thread(() -> {
-                try {
-                    fos1 = new FileOutputStream(pipePath);
-                } catch (FileNotFoundException e) {
-                    Log.e("FFmpeg", "Failed to open output stream 1", e);
-                }
-            }).start();
 
             // Start streaming thread
 
@@ -101,12 +93,14 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
             // Run the FFmpeg process
             try {
                 long id = FFmpeg.executeAsync(command, new ExecuteCallback());
+
             } catch (Exception e) {
                 Log.i("FFmpeg", "Executing FFmpeg command");
             }
 
-
+            fos1 = new FileOutputStream(pipePath);
             streamingThread.start();
+
         } catch (Exception e) {
             Log.e("FFmpeg", "Streaming failed" + e.getMessage());
         }

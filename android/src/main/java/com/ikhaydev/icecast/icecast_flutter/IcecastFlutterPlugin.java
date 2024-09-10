@@ -105,17 +105,18 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
             }).start();
 
             // Start streaming thread
-            streamingThread = new Thread(() -> {
-                String[] command = {
-                    "-f", "s16le",               // Raw PCM 16-bit little-endian
-                    "-ar", SAMPLE_RATE, // Set sample rate
-                    "-ac", NUM_CHANNELS,                  // Single channel (mono)
-                    "-i", pipePath1,              // Input from the named pipe
-                    "-c:a", "libmp3lame",        // Use LAME MP3 encoder
-                    "-b:a", BIT_RATE+"k",              // Set audio bitrate
-                    "-f", "mp3",                 // Use MP# container format
-                    "icecast://" + ICECAST_USERNAME + ":" + ICECAST_PASSWORD + "@" + ICECAST_SERVER_ADDRESS +":"+ICECAST_PORT+ ICECAST_MOUNT
 
+            String[] command = {
+                    "-thread_queue_size", "812",
+                    "-f", "s16le",  // PCM 16-bit
+                    "-ar", SAMPLE_RATE,  // Set the sample rate
+                    "-ac", NUM_CHANNELS,  // Set the channel count
+                    "-i", pipePath1,  // Input from the named pipe
+                    "-c:a", "libopus",  // Use the Opus codec for output
+                    "-b:a", BIT_RATE + "k",  // Set the bitrate for Opus
+                    "-application", "audio",  // Set the Opus application type (audio)
+                    "-f", "opus",  // Set the output format to Opus
+                    "icecast://" + ICECAST_USERNAME + ":" + ICECAST_PASSWORD + "@" + ICECAST_SERVER_ADDRESS + ":" + ICECAST_PORT + ICECAST_MOUNT
             };
             
 

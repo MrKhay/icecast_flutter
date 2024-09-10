@@ -112,16 +112,17 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
                         "-i", pipePath1,  // Mic audio
                         "-thread_queue_size", "1024",
                         "-f", "s16le", "-ar", SAMPLE_RATE, "-ac", NUM_CHANNELS,
-                        "-i", pipePath2,  // Music audio (generated silence)
+                        "-i", pipePath2,  // Music audio
 
-                        // Mix the two inputs, ensuring silence when a stream is empty
-                        "-filter_complex", "[0:a][1:a]amix=inputs=2:duration=longest:dropout_transition=0",
+                        // Use a more advanced filter to handle silence and avoid repetition
+                        "-filter_complex", "[0:a]aresample=async=1:first_pts=0[a1];[1:a]aresample=async=1:first_pts=0[a2];[a1][a2]amix=inputs=2:duration=longest:dropout_transition=0",
 
                         "-c:a", "libmp3lame", "-b:a", BIT_RATE + "k",
                         "-f", "mp3",
                         "icecast://" + ICECAST_USERNAME + ":" + ICECAST_PASSWORD + "@" + ICECAST_SERVER_ADDRESS + ":" + ICECAST_PORT + ICECAST_MOUNT,
                         "-loglevel", "verbose",
                 };
+
 
 
                 // Run the FFmpeg process

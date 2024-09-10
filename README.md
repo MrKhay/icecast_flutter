@@ -57,8 +57,7 @@ Use the startStream method to start streaming to your Icecast server. You can co
 void startIcecastStream() async {
 
    await _icecastFlutterPlugin.startStream(
-          outputStream1.stream,
-          outputStream2.stream);
+          outputStream.stream);
 }
 ```
 
@@ -75,18 +74,12 @@ void stopIcecastStream() async {
 ## Writing Audio Data to Stream
 
 ```dart
-// Write to stream pipe 1
-outputStream1.add(yourPcmByteArray);
+// Write to stream pipe 
+outputStream.add(yourPcmByteArray);
 
-// Write to stream pipe 2
-outputStream2.add(yourPcmByteArray);
 ```
 
 ## Platform Support
 
 - Android: Supported
 - iOS: Coming soon
-
-## Important 🚧
-
-If only one audio stream is required, the plugin supports continuous streaming of silence to the secondary stream (you handle this yourself). This ensures the integrity of the primary stream while maintaining a stable connection with the Icecast server.

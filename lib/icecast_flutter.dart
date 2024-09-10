@@ -3,43 +3,40 @@ import 'icecast_flutter_platform_interface.dart';
 
 class IcecastFlutter {
   /// Streaming sampleRate `default is 44100 Hz`
-  final int sampleRate;
+  final int _sampleRate;
 
   /// PCM-16 Chunk Channel (Mono = 1 and Stero = 2) `default is Stero`
-  final int numChannels;
+  final int _numChannels;
 
   /// Streaming bitrate `default is 128 kbps`
-  final int bitrate;
-
-  /// [True] when streaming has started and [False] when not
-  late bool isStreaming;
+  final int _bitrate;
 
   /// Icecast Server address
-  final String serverAddress;
+  final String _serverAddress;
 
   /// Icecast username
-  final String userName;
+  final String _userName;
 
   /// Icecast port
-  final int port;
+  final int _port;
 
   /// Icecast mount
-  final String mount;
+  final String _mount;
 
   /// Icecast password
-  final String password;
+  final String _password;
 
   /// Error Callback when adding PCM-16 chunk to upload stream
-  final void Function(String error)? onError;
+  final void Function(String error)? _onError;
 
   ///  Callback for when streaming ends with no error
-  final void Function()? onComplete;
+  final void Function()? _onComplete;
 
   /// PCM-16 bit input stream 1
-  late final Stream<List<int>> inputStream1;
+  late final Stream<List<int>> _inputStream1;
 
   /// PCM-16 bit input stream 2
-  late final Stream<List<int>> inputStream2;
+  late final Stream<List<int>> _inputStream2;
 
   static const MethodChannel _channel = MethodChannel('icecast_flutter');
 
@@ -47,10 +44,10 @@ class IcecastFlutter {
     switch (call.method) {
       case "onError":
         String error = call.arguments['error'];
-        onError?.call(error);
+        _onError?.call(error);
         break;
       case "onComplete":
-        onComplete?.call();
+        _onComplete?.call();
         break;
       default:
         throw MissingPluginException(
@@ -60,18 +57,26 @@ class IcecastFlutter {
 
   /// IcecastFlutter Constructor
   IcecastFlutter({
-    this.bitrate = 128,
-    this.numChannels = 2,
-    this.sampleRate = 44100,
-    this.onError,
-    this.onComplete,
-    required this.serverAddress,
-    required this.port,
-    required this.password,
-    required this.userName,
-    required this.mount,
-  }) {
-    isStreaming = false;
+    int bitrate = 128,
+    int numChannels = 2,
+    int sampleRate = 44100,
+    void Function(String)? onError,
+    void Function()? onComplete,
+    required String serverAddress,
+    required int port,
+    required String password,
+    required String userName,
+    required String mount,
+  })  : _onComplete = onComplete,
+        _onError = onError,
+        _password = password,
+        _mount = mount,
+        _port = port,
+        _userName = userName,
+        _serverAddress = serverAddress,
+        _bitrate = bitrate,
+        _numChannels = numChannels,
+        _sampleRate = sampleRate {
     _channel.setMethodCallHandler(_handleNativeMethodCall);
   }
 
@@ -83,19 +88,19 @@ class IcecastFlutter {
     Stream<List<int>> inputStream2,
   ) async {
     // init stream 1
-    this.inputStream1 = inputStream1;
+    _inputStream1 = inputStream1;
     // init stream 2
-    this.inputStream2 = inputStream2;
+    _inputStream2 = inputStream2;
 
     await IcecastFlutterPlatform.instance.startStream(
-      bitrate: bitrate,
-      sampleRate: sampleRate,
-      numChannels: numChannels,
-      userName: userName,
-      port: port,
-      password: password,
-      mount: mount,
-      serverAddress: serverAddress,
+      bitrate: _bitrate,
+      sampleRate: _sampleRate,
+      numChannels: _numChannels,
+      userName: _userName,
+      port: _port,
+      password: _password,
+      mount: _mount,
+      serverAddress: _serverAddress,
     );
 
     _listenToPCMBytes();
@@ -103,12 +108,12 @@ class IcecastFlutter {
 
   void _listenToPCMBytes() {
     // listen and send new bytes to stream 1
-    inputStream1.listen((List<int> byte) async {
+    _inputStream1.listen((List<int> byte) async {
       await writeToStream1(byte);
     });
 
     // listen and send new bytes to stream 2
-    inputStream2.listen((List<int> byte) async {
+    _inputStream2.listen((List<int> byte) async {
       await writeToStream2(byte);
     });
   }
@@ -128,13 +133,13 @@ class IcecastFlutter {
     return await IcecastFlutterPlatform.instance.stopStream();
   }
 
-  /// Generates a silent PCM 16-bit audio chunk.
+  /// Generates a silent PCM 16-bit audio byte.
   ///
   /// [durationInSeconds] - Duration of the silence in seconds.
   /// [sampleRate] - Sample rate (e.g., 44100).
   /// [channels] - Number of channels (e.g., 1 for mono, 2 for stereo).
   /// Returns a [Uint8List] containing the silence audio data.
-  static List<int> generateSilenceChunk(
+  static List<int> generateSilentBytes(
       int durationInSeconds, int sampleRate, int numChannels) {
     int bytesPerSample = 2; // For PCM 16-bit
     int silenceSize =

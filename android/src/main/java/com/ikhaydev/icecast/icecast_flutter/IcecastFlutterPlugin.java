@@ -136,7 +136,7 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
         try {
             if (fos1 != null) {
                 fos1.write(chunk);
-//                logByteArray(chunk);
+               logByteArray(chunk);
                 fos1.flush(); // Ensure data is written
             }
             return null;

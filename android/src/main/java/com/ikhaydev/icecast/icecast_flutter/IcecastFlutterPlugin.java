@@ -154,7 +154,7 @@ public class IcecastFlutterPlugin implements FlutterPlugin, MethodCallHandler, A
             unsignedData.append(Byte.toUnsignedInt(b)).append(" ");
         }
 
-        Log.i("FFmpeg", unsignedData.toString());
+        Log.i("FFmpeg","Native: " + unsignedData.toString());
     }
 
 
